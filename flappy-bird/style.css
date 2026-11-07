@@ -1,0 +1,51 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #1e1e2e;
+  font-family: monospace;
+  color: #cdd6f4;
+  user-select: none;
+}
+
+.contenedor {
+  position: relative;
+}
+
+/* El canvas se escala para caber en pantalla manteniendo su proporción */
+#juego {
+  display: block;
+  height: min(600px, 90vh);
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  touch-action: none; /* evita zoom/scroll al tocar en móvil */
+  cursor: pointer;
+}
+
+#btnSonido {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.ayuda {
+  font-size: 14px;
+  opacity: 0.7;
+}
