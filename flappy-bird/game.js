@@ -17,6 +17,7 @@ const SEPARACION = 200;       // distancia horizontal entre tubos
 const ANCHO_TUBO = 60;
 const ALTO_SUELO = 80;
 const LIMITE_SUELO = ALTO - ALTO_SUELO;
+const PIXEL = 3;              // tamaño de cada "pixel" del pixel art
 
 // ---------- Estado del juego ----------
 // Estados posibles: "menu", "jugando", "fin"
@@ -230,44 +231,100 @@ function actualizar(dt) {
 }
 
 // =====================================================
-//  DIBUJO
+//  DIBUJO (pixel art)
 // =====================================================
+
+// Dibuja un rectángulo alineado a una cuadrícula de PIXEL x PIXEL.
+// Así todo se ve en "bloques", como en los juegos retro.
+function bloque(x, y, ancho, alto, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(
+    Math.round(x / PIXEL) * PIXEL,
+    Math.round(y / PIXEL) * PIXEL,
+    Math.ceil(ancho / PIXEL) * PIXEL,
+    Math.ceil(alto / PIXEL) * PIXEL
+  );
+}
+
+// Dibuja un sprite escrito como texto: cada letra es un color y "." es transparente
+function sprite(dibujo, colores, x, y, tamano = PIXEL) {
+  dibujo.forEach((fila, f) => {
+    [...fila].forEach((letra, c) => {
+      if (letra !== ".") bloque(x + c * tamano, y + f * tamano, tamano, tamano, colores[letra]);
+    });
+  });
+}
+
+// ---------- Sprites ----------
+const COLORES_PAJARO = {
+  K: "#3b2a1a", // contorno
+  Y: "#f7d02c", // cuerpo
+  L: "#fff4b0", // ala
+  W: "#ffffff", // ojo
+  B: "#000000", // pupila
+  O: "#f2701d", // pico
+};
+
+const PAJARO_ALA_ARRIBA = [
+  "....KKKKK...",
+  "..KKYYYKWK..",
+  ".KLLKYKWWWK.",
+  "KLLLLKKWWBK.",
+  "KLLLLKYKWBK.",
+  "KYLLKYYYKKKK",
+  ".KYYYYYKOOOK",
+  "..KKYYYYKOOK",
+  "....KKKKKKK.",
+];
+
+const PAJARO_ALA_ABAJO = [
+  "....KKKKK...",
+  "..KKYYYKWK..",
+  ".KYYYYKWWWK.",
+  "KYYYYYKWWBK.",
+  "KKKKKYYKWBK.",
+  "KLLLLKYYKKKK",
+  "KLLLLKYKOOOK",
+  ".KLLKYYYKOOK",
+  "..KKKKKKKKK.",
+];
+
+const NUBE = [
+  "....WWWW......",
+  "..WWWWWWWW.WW.",
+  ".WWWWWWWWWWWWW",
+  "WWWWWWWWWWWWWW",
+  ".WWWWWWWWWWWW.",
+];
+
+// ---------- Escenario ----------
 function dibujarCielo() {
-  const degradado = ctx.createLinearGradient(0, 0, 0, ALTO);
-  degradado.addColorStop(0, "#4ec0ca");
-  degradado.addColorStop(1, "#b8e8ee");
-  ctx.fillStyle = degradado;
-  ctx.fillRect(0, 0, ANCHO, ALTO);
+  // En lugar de un degradado suave, franjas de color (estilo retro)
+  const franjas = ["#4ec0ca", "#5cc8d1", "#6dd0d8", "#80d8df", "#95e0e6", "#b8e8ee"];
+  const altoFranja = LIMITE_SUELO / franjas.length;
+  franjas.forEach((color, i) => bloque(0, i * altoFranja, ANCHO, altoFranja + PIXEL, color));
 }
 
 function dibujarNubes() {
-  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
   for (const nube of nubes) {
-    const e = nube.escala;
-    ctx.beginPath();
-    ctx.arc(nube.x, nube.y, 20 * e, 0, Math.PI * 2);
-    ctx.arc(nube.x + 25 * e, nube.y - 10 * e, 25 * e, 0, Math.PI * 2);
-    ctx.arc(nube.x + 50 * e, nube.y, 20 * e, 0, Math.PI * 2);
-    ctx.fill();
+    const tamano = Math.max(1, Math.round(nube.escala * 2)) * PIXEL;
+    sprite(NUBE, { W: "#ffffff" }, nube.x, nube.y, tamano);
   }
 }
 
 function dibujarTubo(x, y, alto, bocaAbajo) {
-  // Cuerpo
-  ctx.fillStyle = "#73bf2e";
-  ctx.fillRect(x, y, ANCHO_TUBO, alto);
-  // Brillo
-  ctx.fillStyle = "#9ce659";
-  ctx.fillRect(x + 6, y, 8, alto);
+  // Cuerpo: contorno, color base, brillo y sombra
+  bloque(x, y, ANCHO_TUBO, alto, "#2d5a0e");
+  bloque(x + PIXEL, y, ANCHO_TUBO - PIXEL * 2, alto, "#73bf2e");
+  bloque(x + PIXEL * 3, y, PIXEL * 3, alto, "#9ce659");
+  bloque(x + ANCHO_TUBO - PIXEL * 5, y, PIXEL * 3, alto, "#5a9e1f");
+
   // Boca del tubo
   const bocaY = bocaAbajo ? y + alto - 24 : y;
-  ctx.fillStyle = "#5a9e1f";
-  ctx.fillRect(x - 4, bocaY, ANCHO_TUBO + 8, 24);
-  // Contorno
-  ctx.strokeStyle = "#2d5a0e";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x, y, ANCHO_TUBO, alto);
-  ctx.strokeRect(x - 4, bocaY, ANCHO_TUBO + 8, 24);
+  bloque(x - PIXEL, bocaY, ANCHO_TUBO + PIXEL * 2, 24, "#2d5a0e");
+  bloque(x, bocaY + PIXEL, ANCHO_TUBO, 24 - PIXEL * 2, "#73bf2e");
+  bloque(x + PIXEL * 2, bocaY + PIXEL, PIXEL * 3, 24 - PIXEL * 2, "#9ce659");
+  bloque(x + ANCHO_TUBO - PIXEL * 4, bocaY + PIXEL, PIXEL * 3, 24 - PIXEL * 2, "#5a9e1f");
 }
 
 function dibujarTubos() {
@@ -279,96 +336,53 @@ function dibujarTubos() {
 }
 
 function dibujarSuelo() {
-  ctx.fillStyle = "#ded895";
-  ctx.fillRect(0, LIMITE_SUELO, ANCHO, ALTO_SUELO);
-
-  // Franja con rayas que se desplazan
-  ctx.fillStyle = "#73bf2e";
-  ctx.fillRect(0, LIMITE_SUELO, ANCHO, 14);
-  ctx.fillStyle = "#5a9e1f";
+  bloque(0, LIMITE_SUELO, ANCHO, ALTO_SUELO, "#ded895");
+  bloque(0, LIMITE_SUELO, ANCHO, 15, "#73bf2e");
+  // Rayas que se desplazan
   for (let x = sueloX; x < ANCHO; x += 24) {
-    ctx.fillRect(x, LIMITE_SUELO, 12, 14);
+    bloque(x, LIMITE_SUELO + PIXEL, 12, 12, "#5a9e1f");
   }
-  ctx.fillStyle = "#2d5a0e";
-  ctx.fillRect(0, LIMITE_SUELO, ANCHO, 2);
+  bloque(0, LIMITE_SUELO, ANCHO, PIXEL, "#2d5a0e");
+  bloque(0, LIMITE_SUELO + 15, ANCHO, PIXEL, "#c4b968");
 }
 
 function dibujarPajaro() {
-  ctx.save();
-  ctx.translate(pajaro.x, pajaro.y);
+  // Alterna dos cuadros para animar el aleteo (en "fin" se queda quieto)
+  const aleteando = estado !== "fin" && Math.floor(tiempo / 6) % 2 === 0;
+  const cuadro = aleteando ? PAJARO_ALA_ABAJO : PAJARO_ALA_ARRIBA;
 
-  // Inclinación según la velocidad (sube = nariz arriba, cae = nariz abajo)
-  const angulo = estado === "menu" ? 0 : Math.max(-0.5, Math.min(pajaro.vel / 10, 1.2));
-  ctx.rotate(angulo);
-
-  // Cuerpo
-  ctx.fillStyle = "#f7d02c";
-  ctx.strokeStyle = "#5a3e00";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(0, 0, pajaro.radio, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  // Ala (se mueve con el tiempo para simular aleteo)
-  const ala = Math.sin(tiempo / 3) * 4;
-  ctx.fillStyle = "#fff4b0";
-  ctx.beginPath();
-  ctx.ellipse(-5, 2 + ala, 8, 5, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  // Ojo
-  ctx.fillStyle = "#fff";
-  ctx.beginPath();
-  ctx.arc(6, -5, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = "#000";
-  ctx.beginPath();
-  ctx.arc(8, -5, 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Pico
-  ctx.fillStyle = "#f2701d";
-  ctx.beginPath();
-  ctx.moveTo(10, 1);
-  ctx.lineTo(22, 4);
-  ctx.lineTo(10, 8);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.restore();
+  const ancho = cuadro[0].length * PIXEL;
+  const alto = cuadro.length * PIXEL;
+  sprite(cuadro, COLORES_PAJARO, pajaro.x - ancho / 2, pajaro.y - alto / 2);
 }
 
-// Texto blanco con borde negro, centrado
+// Texto con fuente pixel y sombra dura, centrado
 function texto(contenido, y, tamano) {
-  ctx.font = `bold ${tamano}px monospace`;
+  ctx.font = `${tamano}px "Press Start 2P", monospace`;
   ctx.textAlign = "center";
-  ctx.lineWidth = 5;
-  ctx.strokeStyle = "#000";
+  ctx.fillStyle = "#000";
+  ctx.fillText(contenido, ANCHO / 2 + 4, y + 4); // sombra
   ctx.fillStyle = "#fff";
-  ctx.strokeText(contenido, ANCHO / 2, y);
   ctx.fillText(contenido, ANCHO / 2, y);
 }
 
 function dibujarInterfaz() {
   if (estado === "menu") {
-    texto("FLAPPY BIRD", 150, 42);
-    texto("Toca o presiona Espacio", 400, 18);
-    if (mejor > 0) texto(`Récord: ${mejor}`, 440, 18);
+    texto("FLAPPY BIRD", 160, 32);
+    texto("Toca o presiona", 390, 16);
+    texto("Espacio", 415, 16);
+    if (mejor > 0) texto(`Récord: ${mejor}`, 460, 16);
   }
 
   if (estado === "jugando") {
-    texto(puntos, 70, 48);
+    texto(puntos, 80, 40);
   }
 
   if (estado === "fin") {
-    texto("GAME OVER", 180, 44);
-    texto(`Puntos: ${puntos}`, 250, 24);
-    texto(`Récord: ${mejor}`, 285, 24);
-    if (tiempoFin > 40) texto("Toca para reintentar", 360, 18);
+    texto("GAME OVER", 180, 32);
+    texto(`Puntos: ${puntos}`, 250, 16);
+    texto(`Récord: ${mejor}`, 285, 16);
+    if (tiempoFin > 40) texto("Toca para reintentar", 360, 16);
   }
 }
 
