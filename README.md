@@ -15,8 +15,8 @@ Juego web indie, minimalista, inspirado en el clásico *Flappy Bird*. Está hech
 | **Universidad** | Universidad Tecnológica de Hermosillo |
 | **Carrera** | Ingeniería en Desarrollo de Software Multiplataforma |
 | **Grupo** | 10-2 |
-| **Materia** | _(nombre de la materia)_ |
-| **Profesor** | _(nombre del profesor)_ |
+| **Materia** | Creación de Videojuegos |
+| **Profesor** | Ivan Rogelio Chenoweth |
 
 ---
 
@@ -129,12 +129,6 @@ No necesita instalación. Clona el repositorio y abre `index.html` en el navegad
 git clone https://github.com/AntOnionPro/flappy-bird.git
 cd flappy-bird
 ```
-
----
-
-## 🎥 Video explicativo
-
-📺 _(enlace al video)_
 
 ---
 
